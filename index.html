@@ -13,10 +13,8 @@
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
     <script src="https://code.jquery.com/qunit/qunit-1.18.0.js"></script>
-
 <script>
   const cedulasDisponiveis = [100, 50, 20, 10, 5, 2, 1];
-
   function calcularTroco(precoDoProduto, valorPago, estoque = null) {
     let trocoRestante = valorPago - precoDoProduto;
     let troco = [];
@@ -24,7 +22,6 @@
     if (trocoRestante === 0) {
         return [];
     }
-    
     // 1. Cria uma cópia mutável do estoque ou usa um objeto vazio para simular 'estoque infinito' (para não quebrar os testes antigos)
     const estoqueParaUso = estoque ? { ...estoque } : {};
 
@@ -38,18 +35,13 @@
             limiteEstoque--;
         }
     });
-
-    // 3. Verificação final: se sobrar troco (trocoRestante > 0), o estoque era insuficiente.
     if (trocoRestante > 0) {
         throw new Error("Não foi possível dar o troco exato com o estoque disponível.");
     }
-
     return troco;
   }
 </script>
-
     <script>
-      // Testes Antigos (4) - Devem passar
       test('calcularTroco(1,1) deve retornar [] - Um array vazio', (assert) => {
         const trocoCalculado = calcularTroco(1, 1)
         const trocoEsperado = []
@@ -73,10 +65,7 @@
         const trocoEsperado = [100, 50, 20, 10, 5, 2, 1]
         assert.deepEqual(trocoCalculado, trocoEsperado)
       })
-
-      // NOVOS TESTES DE ESTOQUE (2) - ESTES AGORA FARÃO O PAINEL FICAR VERMELHO
       test('calcularTroco(120, 200, estoque_limitado) deve retornar [20, 20, 20, 20]', (assert) => {
-          // Troco 80. Estoque de 50 é 0, forçando o uso de 4 notas de 20. A lógica antiga falha.
           const estoqueLimitado = { 100: 1, 50: 0, 20: 5, 10: 10, 5: 0, 2: 0, 1: 0 }; 
           const trocoCalculado = calcularTroco(120, 200, estoqueLimitado); 
           const trocoEsperado = [20, 20, 20, 20];
@@ -84,7 +73,6 @@
       });
 
       test('calcularTroco (falha por falta de cédula) deve lançar erro', (assert) => {
-          // Troco 10. Estoque de 10 é 0, causando um erro. A lógica antiga falha.
           const estoqueInsuficiente = { 100: 1, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0 };
           assert.throws(
               () => { calcularTroco(90, 100, estoqueInsuficiente) },
@@ -93,6 +81,5 @@
           );
       });
     </script>
-
   </body>
 </html>
