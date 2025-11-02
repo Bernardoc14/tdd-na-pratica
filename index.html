@@ -14,30 +14,32 @@
     <div id="qunit-fixture"></div>
     <script src="https://code.jquery.com/qunit/qunit-1.18.0.js"></script>
 
-<script>
-  const cedulasDisponiveis = [100, 50, 20, 10, 5, 2, 1];
+    <script>
+      const cedulasDisponiveis = [100, 50, 20, 10, 5, 2, 1];
 
-  function calcularTroco(precoDoProduto, valorPago) {
-    let diferenca = valorPago - precoDoProduto; 
-    let troco = [];
+      // Alteração na assinatura da função para incluir 'estoque'
+      function calcularTroco(precoDoProduto, valorPago, estoque) {
+        let diferenca = valorPago - precoDoProduto; 
+        let troco = [];
 
-    if (diferenca === 0) {
-      return [];
-    }
+        if (diferenca === 0) {
+          return [];
+        }
+        
+        // Lógica gulosa antiga (IGNORA O ESTOQUE, FORÇANDO OS NOVOS TESTES A FALHAREM)
+        cedulasDisponiveis.forEach((cedula) => {
+          while (diferenca >= cedula) {
+            troco.push(cedula);         
+            diferenca = diferenca - cedula; 
+          }
+        });
 
-    cedulasDisponiveis.forEach((cedula) => {
-      while (diferenca >= cedula) {
-        troco.push(cedula);         
-        diferenca = diferenca - cedula; 
+        return troco;
       }
-    });
-
-    return troco;
-  }
-</script>
+    </script>
 
     <script>
-      // O teste (1,1) é o primeiro, mas os outros 3 farão este painel ficar VERMELHO (RED).
+      // Testes Antigos (4) - Devem passar
       test('calcularTroco(1,1) deve retornar [] - Um array vazio', (assert) => {
         const trocoCalculado = calcularTroco(1, 1)
         const trocoEsperado = []
@@ -61,6 +63,25 @@
         const trocoEsperado = [100, 50, 20, 10, 5, 2, 1]
         assert.deepEqual(trocoCalculado, trocoEsperado)
       })
+
+      // NOVOS TESTES DE ESTOQUE (2) - ESTES AGORA FARÃO O PAINEL FICAR VERMELHO
+      test('calcularTroco(120, 200, estoque_limitado) deve retornar [20, 20, 20, 20]', (assert) => {
+          // Troco 80. Estoque de 50 é 0, forçando o uso de 4 notas de 20. A lógica antiga falha.
+          const estoqueLimitado = { 100: 1, 50: 0, 20: 5, 10: 10, 5: 0, 2: 0, 1: 0 }; 
+          const trocoCalculado = calcularTroco(120, 200, estoqueLimitado); 
+          const trocoEsperado = [20, 20, 20, 20];
+          assert.deepEqual(trocoCalculado, trocoEsperado);
+      });
+
+      test('calcularTroco (falha por falta de cédula) deve lançar erro', (assert) => {
+          // Troco 10. Estoque de 10 é 0, causando um erro. A lógica antiga falha.
+          const estoqueInsuficiente = { 100: 1, 50: 0, 20: 0, 10: 0, 5: 0, 2: 0, 1: 0 };
+          assert.throws(
+              () => { calcularTroco(90, 100, estoqueInsuficiente) },
+              /Não foi possível dar o troco exato./,
+              'Deve lançar um erro quando o estoque for insuficiente para o troco exato.'
+          );
+      });
     </script>
 
   </body>
