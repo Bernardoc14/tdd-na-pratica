@@ -14,29 +14,39 @@
     <div id="qunit-fixture"></div>
     <script src="https://code.jquery.com/qunit/qunit-1.18.0.js"></script>
 
-    <script>
-      const cedulasDisponiveis = [100, 50, 20, 10, 5, 2, 1];
+<script>
+  const cedulasDisponiveis = [100, 50, 20, 10, 5, 2, 1];
 
-      // Alteração na assinatura da função para incluir 'estoque'
-      function calcularTroco(precoDoProduto, valorPago, estoque) {
-        let diferenca = valorPago - precoDoProduto; 
-        let troco = [];
+  function calcularTroco(precoDoProduto, valorPago, estoque = null) {
+    let trocoRestante = valorPago - precoDoProduto;
+    let troco = [];
 
-        if (diferenca === 0) {
-          return [];
+    if (trocoRestante === 0) {
+        return [];
+    }
+    
+    // 1. Cria uma cópia mutável do estoque ou usa um objeto vazio para simular 'estoque infinito' (para não quebrar os testes antigos)
+    const estoqueParaUso = estoque ? { ...estoque } : {};
+
+    cedulasDisponiveis.forEach((cedula) => {
+        // 2. Define o limite. Se 'estoque' for nulo, o limite é Infinito (para testes do tutorial base).
+        let limiteEstoque = estoque ? (estoqueParaUso[cedula] || 0) : Infinity;
+
+        while (trocoRestante >= cedula && limiteEstoque > 0) {
+            troco.push(cedula);
+            trocoRestante -= cedula;
+            limiteEstoque--;
         }
-        
-        // Lógica gulosa antiga (IGNORA O ESTOQUE, FORÇANDO OS NOVOS TESTES A FALHAREM)
-        cedulasDisponiveis.forEach((cedula) => {
-          while (diferenca >= cedula) {
-            troco.push(cedula);         
-            diferenca = diferenca - cedula; 
-          }
-        });
+    });
 
-        return troco;
-      }
-    </script>
+    // 3. Verificação final: se sobrar troco (trocoRestante > 0), o estoque era insuficiente.
+    if (trocoRestante > 0) {
+        throw new Error("Não foi possível dar o troco exato com o estoque disponível.");
+    }
+
+    return troco;
+  }
+</script>
 
     <script>
       // Testes Antigos (4) - Devem passar
